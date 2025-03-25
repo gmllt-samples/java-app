@@ -1,0 +1,55 @@
+name: Release Java App
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set version from tag
+        id: vars
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_ENV
+
+      - name: Prepare folders
+        run: |
+          mkdir -p dist out
+
+      - name: Compile Java code
+        run: |
+          javac -d out src/app/*.java
+
+      - name: Create JAR executable
+        run: |
+          echo "Main-Class: app.Main" > MANIFEST.MF
+          jar cfm "java-app-${VERSION}.jar" MANIFEST.MF -C out .
+          rm MANIFEST.MF  
+          zip -r "java-app-${VERSION}-jar.zip" "java-app-${VERSION}.jar"
+
+      - name: Create runnable bundle (zip)
+        run: |
+          echo '#!/bin/bash' > run.sh
+          echo 'java -cp out app.Main' >> run.sh
+          chmod +x run.sh
+          zip -r "java-app-${VERSION}-bundle.zip" out run.sh
+
+      - name: Create source zip
+        run: |
+          zip -r "java-app-${VERSION}-sources.zip" src
+
+      - name: Upload release artifacts
+        uses: softprops/action-gh-release@v1
+        with:
+          name: ${{ env.VERSION }}
+          tag_name: ${{ env.VERSION }}
+          files: |
+            java-app-${{ env.VERSION }}-jar.zip
+            java-app-${{ env.VERSION }}.jar 
+            java-app-${{ env.VERSION }}-bundle.zip
+            java-app-${{ env.VERSION }}-sources.zip
