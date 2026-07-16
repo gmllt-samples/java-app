@@ -55,6 +55,11 @@ curl "http://localhost:8080?status=404&response_size=2K"
 curl "http://localhost:8080?wait=0.1,0.5,1&status=500&response_size=10K"
 ```
 
+
+```bash
+curl "http://localhost:8080/call/https%3A%2F%2Fexample.org%2F"
+```
+
 ---
 
 ## Makefile Commands
